@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: anibox-s3
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+      enabled: true
+server:
+  port: 8888
+
+# S3存储配置
+storage:
+  validation:
+    max-file-size: 10485760  # 10MB
+    min-file-size: 1024      # 1KB
+    allowed-content-types: image/jpeg,image/png,image/gif,image/webp
+    allowed-extensions: .jpg,.jpeg,.png,.gif,.webp
+    enable-content-validation: true  # 是否启用文件内容验证
+  s3:
+    # 默认上传策略：FIRST, ALL, SPECIFIC
+    upload-strategy: SPECIFIC
+    # 当策略为SPECIFIC时，指定要使用的存储服务名称
+    specific-targets: [minio, rust-fs, cloudflare-r2]
+
+    # 多个S3服务配置
+    services:
+      minio:
+        enabled: true
+        endpoint: http://localhost:9000
+        region: us-east-1
+        access-key: minioadmin
+        secret-key: minioadmin
+        bucket: anibox
+        public-url-pattern: "${endpoint}/${bucket}/${key}"
+      rust-fs:
+        enabled: true
+        endpoint: http://localhost:9001
+        region: auto
+        access-key: rustfsadmin
+        secret-key: rustfsadmin
+        bucket: anibox
+        public-url-pattern: "${endpoint}/${bucket}/${key}"
+
+      cloudflare-r2:
+        enabled: true
+        endpoint: https://account-id.r2.cloudflarestorage.com
+        region: auto
+        access-key: access-key
+        secret-key: secret-key
+        bucket: anibox
+        # 或者使用自定义域名
+        public-url-pattern: "https://example.com/${key}"
+        # 如果没有配置公开域名，则使用预签名URL
+        use-presigned-url: true
+        presigned-url-expiry: 3600  # 预签名URL过期时间（秒
+
+      aws-s3:
+        enabled: false
+        endpoint: https://s3.amazonaws.com
+        region: us-west-2
+        access-key: your-aws-access-key
+        secret-key: your-aws-secret-key
+        bucket: your-aws-bucket
+# 日志配置
+logging:
+  level:
+    com.anibox: INFO
+    software.amazon.awssdk: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId}] %logger{36} - %msg%n"
